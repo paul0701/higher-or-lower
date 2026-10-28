@@ -252,9 +252,22 @@
 
   // ---- session + scores ----
   function setSession(res) { token = res.token; me = res; ls(TOKENK, token); }
+  // ISO week id, matching the server's weekId() exactly, so the weekly board
+  // lands in the right bucket. reportBest is always a freshly-played score, so
+  // it is a valid candidate for this week's best.
+  function weekId() {
+    var d = new Date();
+    var t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+    var day = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - day);
+    var y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+    var wk = Math.ceil(((t - y0) / 864e5 + 1) / 7);
+    return t.getUTCFullYear() + '-W' + String(wk).padStart(2, '0');
+  }
   function submit(best) {
     if (!token || !(best > 0)) return;
-    api('/api/sync', { auth: true, body: { game: GAME, best: best } })
+    var wk = weekId();
+    api('/api/sync', { auth: true, body: { game: GAME, best: best, week: wk, week_best: best } })
       .then(function (r) { if (me) { me.games = me.games || {}; me.games[GAME] = { best: r.best }; } pendingBest = 0; if (btn) { btn.classList.add('on'); setTimeout(function () { if (!ov.classList.contains('show')) btn.classList.remove('on'); }, 1500); } })
       .catch(function () {});
   }
