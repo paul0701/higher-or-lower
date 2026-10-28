@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b1a2b">
+<meta name="description" content="Higher or Lower — a flag appears with its population; guess whether the next country is higher or lower. Play a continent or go global.">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Higher or Lower">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<title>Higher or Lower</title>
+<style>
+  :root{
+    --bg:#0b1a2b; --bg2:#102a43; --card:#16324f; --card2:#1d3f63;
+    --ink:#eaf2fb; --mut:#9fb6d0; --line:rgba(255,255,255,.12);
+    --hi:#36d399; --lo:#f87272; --gold:#ffd166; --teal:#2dd4bf;
+    --font:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif; --head:"Baloo 2",var(--font);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{background:radial-gradient(130% 90% at 50% -10%, #1b3b5e 0%, var(--bg2) 42%, var(--bg) 80%) fixed;color:var(--ink);font-family:var(--font);overflow-x:hidden;min-height:100%;-webkit-user-select:none;user-select:none}
+  .wrap{max-width:720px;margin:0 auto;padding:16px;min-height:100dvh;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  header .logo{font-family:var(--head);font-weight:800;font-size:21px;flex:1;display:flex;align-items:center;gap:8px}
+  header .logo b{color:var(--gold)}
+  .globe{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#7fd4ff,#2a79c9 60%,#17436f);box-shadow:inset -3px -4px 8px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.3);flex:none}
+  .ghost-btn{background:rgba(255,255,255,.08);border:1px solid var(--line);color:var(--ink);font:700 13px var(--font);padding:8px 12px;border-radius:10px;cursor:pointer}
+  .ghost-btn:hover{background:rgba(255,255,255,.14)}
+  .screen{display:none;flex:1;flex-direction:column;animation:fade .35s ease}.screen.on{display:flex}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .center{flex:1;display:flex;flex-direction:column;justify-content:center}
+  h1.big{font-family:var(--head);font-size:clamp(30px,8vw,46px);margin:.2em 0 .1em;line-height:1.04}
+  h1.big span{color:var(--gold)}
+  .sub{color:var(--mut);margin:0 0 22px;font-size:15.5px;line-height:1.55}
+  .btn{font-family:var(--head);font-weight:800;font-size:16px;padding:14px 24px;border-radius:14px;border:0;cursor:pointer;background:linear-gradient(180deg,#5bb0ff,#2f82e6);color:#06131f}
+  .btn.alt{background:rgba(255,255,255,.1);border:1px solid var(--line);color:var(--ink)}
+  .regions{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(min-width:560px){.regions{grid-template-columns:1fr 1fr 1fr}}
+  .rbtn{cursor:pointer;border:1px solid var(--line);border-radius:16px;background:linear-gradient(160deg,var(--card2),var(--card));color:var(--ink);padding:16px 14px;text-align:left;transition:transform .14s,box-shadow .2s}
+  .rbtn:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+  .rbtn .rn{font-family:var(--head);font-weight:700;font-size:18px}.rbtn .rc{color:var(--mut);font-size:12.5px;margin-top:3px}
+  .rbtn.global{grid-column:1/-1;background:linear-gradient(120deg,#13477a,#1b6ea8);border-color:rgba(122,200,255,.4)}.rbtn.global .rn{color:#fff}
+  .rbtn .mult{float:right;background:rgba(255,209,102,.16);color:var(--gold);font-weight:800;font-size:12px;padding:3px 9px;border-radius:999px}
+  .hud{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+  .hud .pill{background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:12px;padding:7px 12px;font-weight:800}
+  .hud .pill small{display:block;font-size:10px;letter-spacing:.12em;color:var(--mut);font-weight:700}.hud .pill b{font-size:19px}
+  .hud .spacer{flex:1}.score b{color:var(--gold)}
+  .hl{display:grid;grid-template-rows:1fr auto 1fr;gap:10px;flex:1;min-height:0}
+  .panel{position:relative;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;border:1px solid var(--line);background:#0e2135}
+  .panel .flag{width:min(46vw,190px);aspect-ratio:4/3;object-fit:cover;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.5);background:#223}
+  .panel .cname{font-family:var(--head);font-weight:700;font-size:clamp(18px,4.6vw,26px);margin-top:12px;text-align:center}
+  .panel .pop{font-size:15px;color:var(--mut);margin-top:4px;min-height:22px}.panel .pop b{color:var(--teal);font-size:20px;font-variant-numeric:tabular-nums}
+  .vs{display:flex;align-items:center;justify-content:center}
+  .choice{display:flex;gap:10px;width:100%;max-width:360px}
+  .choice button{flex:1;font-family:var(--head);font-weight:800;font-size:16px;padding:14px;border-radius:14px;border:0;cursor:pointer;color:#06131f}
+  .choice .hi{background:linear-gradient(180deg,#56e0a8,#27b583)}.choice .lo{background:linear-gradient(180deg,#ff9a9a,#ef5f5f)}
+  .choice button:disabled{opacity:.5}
+  .panel.flash-good{animation:good .5s}.panel.flash-bad{animation:bad .5s}
+  @keyframes good{0%{box-shadow:0 0 0 0 rgba(54,211,153,.6) inset}40%{box-shadow:0 0 0 6px rgba(54,211,153,.5) inset}}
+  @keyframes bad{0%{box-shadow:0 0 0 0 rgba(248,114,114,.6) inset}40%{box-shadow:0 0 0 6px rgba(248,114,114,.5) inset}}
+  .over-card{text-align:center;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,var(--card2),var(--card));padding:28px 22px}
+  .over-card .big-score{font-family:var(--head);font-weight:800;font-size:54px;color:var(--gold);line-height:1}
+  .over-card .newbest{color:var(--hi);font-weight:800;letter-spacing:.08em;margin-top:6px;min-height:20px}
+  .over-card .ostat{color:var(--mut);margin:10px 0 4px}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+  footer{color:var(--mut);font-size:12px;text-align:center;padding:14px 0 6px;opacity:.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo"><span class="globe"></span>Higher <b>or</b> Lower</div>
+    <button class="ghost-btn" id="homeBtn" style="display:none">Menu</button>
+  </header>
+
+  <section class="screen on" id="scrHome">
+    <div class="center">
+      <h1 class="big">Higher <span>or</span> Lower</h1>
+      <p class="sub">A country's flag appears with its population. Is the <b>next</b> country higher or lower? Keep the streak alive. A tiny country like Luxembourg is a gift — you know the next one almost has to be higher.</p>
+      <div><button class="btn" id="startBtn">Choose a region →</button></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scrRegion">
+    <div class="center">
+      <h1 class="big">Choose your world</h1>
+      <p class="sub">Fewer flags are easier. More flags mean more points per correct guess.</p>
+      <div class="regions" id="regionList"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="scrHL">
+    <div class="hud">
+      <div class="pill score"><small>SCORE</small><b id="hlScore">0</b></div>
+      <div class="pill"><small>STREAK</small><b id="hlStreak">0</b></div>
+      <div class="spacer"></div>
+      <div class="pill" id="hlRegion"><small>REGION</small><b>Global</b></div>
+    </div>
+    <div class="hl">
+      <div class="panel" id="hlTop">
+        <img class="flag" id="hlTopFlag" alt=""><div class="cname" id="hlTopName"></div>
+        <div class="pop">population <b id="hlTopPop">—</b></div>
+      </div>
+      <div class="vs"><div class="choice">
+        <button class="hi" id="hlHigher">▲ Higher</button><button class="lo" id="hlLower">▼ Lower</button>
+      </div></div>
+      <div class="panel" id="hlBot">
+        <img class="flag" id="hlBotFlag" alt=""><div class="cname" id="hlBotName"></div>
+        <div class="pop" id="hlBotPopWrap">population <b id="hlBotPop">?</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="scrOver">
+    <div class="center"><div class="over-card">
+      <div class="ostat" id="overWhat">Global</div>
+      <div class="big-score" id="overScore">0</div>
+      <div class="newbest" id="overNew"></div>
+      <div class="ostat" id="overDetail"></div>
+      <div class="btn-row">
+        <button class="btn" id="againBtn">Play again</button>
+        <button class="btn alt" id="regionAgainBtn">Change region</button>
+      </div>
+      <p class="sub" style="margin:16px 0 0;font-size:13px">Open <b>🏆 Ranks</b> (bottom-left) to save your score. One account works across all our games.</p>
+    </div></div>
+  </section>
+
+  <footer>A game by Agnostic Solutions</footer>
+</div>
+
+<script src="data.js"></script>
+<script src="account.js" defer></script>
+<script>
+(function(){
+  'use strict';
+  var CENTRAL = 'https://accounts.agnosticsolutions.co.uk';   // shared one-login service
+  var GAME_ID = 'higher-or-lower', GAME_TITLE = 'Higher or Lower';
+  var C = window.COUNTRIES || [];
+  var REGION_WEIGHT = { 'Global':10,'Africa':7,'Asia':7,'Europe':6,'North America':5,'South America':4,'Oceania':4 };
+  var REGIONS = ['Africa','Asia','Europe','North America','South America','Oceania'];
+  var $=function(id){return document.getElementById(id);};
+  function show(id){ ['scrHome','scrRegion','scrHL','scrOver'].forEach(function(s){ $(s).classList.toggle('on',s===id); }); $('homeBtn').style.display=(id==='scrHome')?'none':''; }
+  function flagSrc(c){return 'flags/'+c+'.svg';}
+  function fmt(n){return Number(n).toLocaleString();}
+  function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  function pool(r){return r==='Global'?C.slice():C.filter(function(c){return c.region===r;});}
+  function el(t,c){var e=document.createElement(t);if(c)e.className=c;return e;}
+  var state={region:'Global'};
+
+  function buildRegions(){
+    var list=$('regionList'); list.innerHTML='';
+    var g=el('button','rbtn global'); g.innerHTML='<span class="mult">×'+REGION_WEIGHT.Global+' points</span><div class="rn">🌍 Global</div><div class="rc">All '+C.length+' countries — the real test</div>';
+    g.onclick=function(){start('Global');}; list.appendChild(g);
+    REGIONS.forEach(function(r){var n=pool(r).length;var b=el('button','rbtn');b.innerHTML='<span class="mult">×'+REGION_WEIGHT[r]+'</span><div class="rn">'+r+'</div><div class="rc">'+n+' countries</div>';b.onclick=function(){start(r);};list.appendChild(b);});
+  }
+  function start(region){ state.region=region; startHL(); }
+
+  var hl={};
+  function startHL(){
+    hl.deck=shuffle(pool(state.region)); if(hl.deck.length<4){hl.deck=shuffle(C);state.region='Global';}
+    hl.i=0; hl.score=0; hl.streak=0; hl.weight=REGION_WEIGHT[state.region]||1; hl.busy=false;
+    $('hlScore').textContent='0'; $('hlStreak').textContent='0';
+    $('hlRegion').querySelector('b').textContent=state.region;
+    hl.current=hl.deck[hl.i++]; renderTop(hl.current); nextHL(); show('scrHL');
+  }
+  function renderTop(c){ $('hlTopFlag').src=flagSrc(c.code); $('hlTopName').textContent=c.name; $('hlTopPop').textContent=fmt(c.pop); }
+  function nextHL(){
+    if(hl.i>=hl.deck.length) hl.deck=hl.deck.concat(shuffle(pool(state.region)));
+    hl.next=hl.deck[hl.i++];
+    while(hl.next&&hl.next.code===hl.current.code&&hl.i<hl.deck.length) hl.next=hl.deck[hl.i++];
+    $('hlBotFlag').src=flagSrc(hl.next.code); $('hlBotName').textContent=hl.next.name;
+    $('hlBotPopWrap').innerHTML='population <b id="hlBotPop">?</b>';
+    $('hlHigher').disabled=false; $('hlLower').disabled=false; hl.busy=false;
+  }
+  function guess(higher){
+    if(hl.busy)return; hl.busy=true; $('hlHigher').disabled=true; $('hlLower').disabled=true;
+    var correct=higher?(hl.next.pop>=hl.current.pop):(hl.next.pop<=hl.current.pop);
+    $('hlBotPopWrap').innerHTML='population <b style="color:'+(correct?'var(--hi)':'var(--lo)')+'">'+fmt(hl.next.pop)+'</b>';
+    $('hlBot').classList.add(correct?'flash-good':'flash-bad');
+    setTimeout(function(){$('hlBot').classList.remove('flash-good','flash-bad');},500);
+    if(correct){ hl.score+=hl.weight; hl.streak++; $('hlScore').textContent=fmt(hl.score); $('hlStreak').textContent=hl.streak;
+      setTimeout(function(){hl.current=hl.next;renderTop(hl.current);nextHL();},850);
+    } else { setTimeout(function(){over(hl.score);},1100); }
+  }
+  function over(score){
+    $('overWhat').textContent=state.region;
+    $('overScore').textContent=fmt(score);
+    var k='hol.best'; var prev=0; try{prev=parseInt(localStorage.getItem(k)||'0',10)||0;}catch(e){}
+    var best=score>prev; if(best){try{localStorage.setItem(k,String(score));}catch(e){}}
+    $('overNew').textContent=best?'NEW PERSONAL BEST':('Your best: '+fmt(prev));
+    $('overDetail').textContent='Streak of '+hl.streak+' · ×'+REGION_WEIGHT[state.region]+' points per correct';
+    show('scrOver');
+    if(window.Account) Account.reportBest(score);
+  }
+
+  $('startBtn').onclick=function(){buildRegions();show('scrRegion');};
+  $('homeBtn').onclick=function(){show('scrHome');};
+  $('regionAgainBtn').onclick=function(){buildRegions();show('scrRegion');};
+  $('againBtn').onclick=function(){start(state.region);};
+  $('hlHigher').onclick=function(){guess(true);};
+  $('hlLower').onclick=function(){guess(false);};
+
+  function initAcct(){ if(!window.Account){return setTimeout(initAcct,50);} Account.init({ game:GAME_ID, title:GAME_TITLE, apiBase:CENTRAL });
+    var st=document.createElement("style"); st.textContent=":root{--acc:#4aa3ff;--acc-ink:#07121f;--acc-panel:#10263d;--acc-text:#eaf2fb;--acc-font:\x27Nunito\x27,system-ui,sans-serif}"; document.head.appendChild(st); }
+  initAcct();
+  if('serviceWorker' in navigator) window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});
+})();
+</script>
+</body>
+</html>
