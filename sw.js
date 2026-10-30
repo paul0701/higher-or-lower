@@ -1,5 +1,5 @@
-const CACHE = 'higherlower-v2';
-const CORE = ['./', './index.html', './data.js', './account.js', './manifest.webmanifest',
+const CACHE = 'higherlower-v3';
+const CORE = ['./season-guard.js', './', './index.html', './data.js', './account.js', './manifest.webmanifest',
   './icons/icon-192.png', './icons/icon-512.png'];
 
 self.addEventListener('install', (e) => {
